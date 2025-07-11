@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rock Paper Scissors AI</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Orbitron', monospace;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      overflow-x: hidden;
+    }
+
+    .game-container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px);
+      border-radius: 25px;
+      padding: 40px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      max-width: 600px;
+      width: 90%;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .game-container::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+      animation: shimmer 3s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+      50% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+      100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 900;
+      margin-bottom: 30px;
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientShift 3s ease infinite;
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .score-board {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 30px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 15px;
+      padding: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .score-item {
+      text-align: center;
+    }
+
+    .score-label {
+      font-size: 0.9rem;
+      opacity: 0.8;
+      margin-bottom: 5px;
+    }
+
+    .score-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #4ecdc4;
+      text-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+    }
+
+    .choices-display {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      margin: 30px 0;
+      min-height: 120px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .choice-display {
+      text-align: center;
+      opacity: 0;
+      transform: scale(0.8);
+      transition: all 0.5s ease;
+    }
+
+    .choice-display.active {
+      opacity: 1;
+      transform: scale(1);
+      animation: bounce 0.6s ease;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0) scale(1); }
+      40% { transform: translateY(-10px) scale(1.1); }
+      60% { transform: translateY(-5px) scale(1.05); }
+    }
+
+    .choice-emoji {
+      font-size: 4rem;
+      margin-bottom: 10px;
+      display: block;
+      filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3));
+    }
+
+    .choice-label {
+      font-size: 1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .vs-text {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #ff6b6b;
+      text-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+    }
+
+    .choice-btn {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 20px 25px;
+      font-size: 3rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      min-width: 120px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .choice-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+      transition: all 0.3s ease;
+      transform: translate(-50%, -50%);
+    }
+
+    .choice-btn:hover::before {
+      width: 200px;
+      height: 200px;
+    }
+
+    .choice-btn:hover {
+      transform: translateY(-8px) scale(1.05);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .choice-btn:active {
+      transform: translateY(-4px) scale(0.98);
+    }
+
+    .choice-btn.selected {
+      animation: selectedPulse 0.8s ease;
+      border-color: #4ecdc4;
+      box-shadow: 0 0 25px rgba(78, 205, 196, 0.6);
+    }
+
+    @keyframes selectedPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+
+    .result-display {
+      margin-top: 30px;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .result-text {
+      font-size: 1.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.5s ease;
+    }
+
+    .result-text.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .result-text.win {
+      color: #4ecdc4;
+      text-shadow: 0 0 20px rgba(78, 205, 196, 0.8);
+      animation: celebrate 1s ease;
+    }
+
+    .result-text.lose {
+      color: #ff6b6b;
+      text-shadow: 0 0 20px rgba(255, 107, 107, 0.8);
+    }
+
+    .result-text.tie {
+      color: #ffd93d;
+      text-shadow: 0 0 20px rgba(255, 217, 61, 0.8);
+    }
+
+    @keyframes celebrate {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      25% { transform: scale(1.1) rotate(-2deg); }
+      75% { transform: scale(1.1) rotate(2deg); }
+    }
+
+    .reset-btn {
+      background: linear-gradient(145deg, #ff6b6b, #ff5252);
+      border: none;
+      border-radius: 15px;
+      padding: 12px 30px;
+      color: white;
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .reset-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(255, 107, 107, 0.4);
+    }
+
+    .ai-thinking {
+      font-size: 1rem;
+      color: #4ecdc4;
+      margin-top: 15px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .ai-thinking.show {
+      opacity: 1;
+      animation: thinking 1.5s ease-in-out infinite;
+    }
+
+    @keyframes thinking {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    @media (max-width: 768px) {
+      .game-container {
+        padding: 30px 20px;
+        margin: 20px;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+      
+      .choice-btn {
+        font-size: 2.5rem;
+        padding: 15px 20px;
+        min-width: 100px;
+      }
+      
+      .choice-emoji {
+        font-size: 3rem;
+      }
+      
+      .controls {
+        gap: 15px;
+      }
+    }
+
+    /* Floating particles animation */
+    .particles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 50%;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="particles" id="particles"></div>
+  
+  <div class="game-container">
+    <h1>🎮 Rock Paper Scissors AI</h1>
+    
+    <div class="score-board">
+      <div class="score-item">
+        <div class="score-label">You</div>
+        <div class="score-value" id="playerScore">0</div>
+      </div>
+      <div class="score-item">
+        <div class="score-label">AI</div>
+        <div class="score-value" id="aiScore">0</div>
+      </div>
+    </div>
+
+    <div class="choices-display" id="choicesDisplay">
+      <div class="choice-display" id="playerChoice">
+        <span class="choice-emoji">❓</span>
+        <div class="choice-label">You</div>
+      </div>
+      <div class="vs-text">VS</div>
+      <div class="choice-display" id="aiChoice">
+        <span class="choice-emoji">🤖</span>
+        <div class="choice-label">AI</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="choice-btn" onclick="playMove('R')" data-choice="rock">🪨</button>
+      <button class="choice-btn" onclick="playMove('P')" data-choice="paper">📄</button>
+      <button class="choice-btn" onclick="playMove('S')" data-choice="scissors">✂️</button>
+    </div>
+
+    <div class="ai-thinking" id="aiThinking">🤖 AI is thinking...</div>
+
+    <div class="result-display">
+      <div class="result-text" id="result"></div>
+    </div>
+
+    <button class="reset-btn" onclick="resetGame()">🔄 Reset Game</button>
+  </div>
+
+  <script>
+    let playerScore = 0;
+    let aiScore = 0;
+    let gameActive = true;
+
+    const choices = {
+      'R': { emoji: '🪨', name: 'Rock' },
+      'P': { emoji: '📄', name: 'Paper' },
+      'S': { emoji: '✂️', name: 'Scissors' }
+    };
+
+    function createParticles() {
+      const particles = document.getElementById('particles');
+      setInterval(() => {
+        if (particles.children.length < 15) {
+          const particle = document.createElement('div');
+          particle.className = 'particle';
+          particle.style.left = Math.random() * 100 + '%';
+          particle.style.animationDelay = Math.random() * 2 + 's';
+          particle.style.animationDuration = (Math.random() * 3 + 4) + 's';
+          particles.appendChild(particle);
+          
+          setTimeout(() => {
+            if (particles.contains(particle)) {
+              particles.removeChild(particle);
+            }
+          }, 7000);
+        }
+      }, 500);
+    }
+
+    function getAIChoice() {
+      const aiChoices = ['R', 'P', 'S'];
+      return aiChoices[Math.floor(Math.random() * aiChoices.length)];
+    }
+
+    function determineWinner(playerChoice, aiChoice) {
+      if (playerChoice === aiChoice) return 'tie';
+      
+      const winConditions = {
+        'R': 'S',
+        'P': 'R',
+        'S': 'P'
+      };
+      
+      return winConditions[playerChoice] === aiChoice ? 'win' : 'lose';
+    }
+
+    function updateDisplay(playerChoice, aiChoice, result) {
+      const playerDisplay = document.getElementById('playerChoice');
+      const aiDisplay = document.getElementById('aiChoice');
+      const resultDisplay = document.getElementById('result');
+      
+      playerDisplay.querySelector('.choice-emoji').textContent = choices[playerChoice].emoji;
+      playerDisplay.querySelector('.choice-label').textContent = choices[playerChoice].name;
+      
+      aiDisplay.querySelector('.choice-emoji').textContent = choices[aiChoice].emoji;
+      aiDisplay.querySelector('.choice-label').textContent = choices[aiChoice].name;
+      
+      // Show choices with animation
+      playerDisplay.classList.add('active');
+      aiDisplay.classList.add('active');
+      
+      // Update result
+      let resultText = '';
+      let resultClass = '';
+      
+      switch(result) {
+        case 'win':
+          resultText = '🎉 You Win!';
+          resultClass = 'win';
+          playerScore++;
+          break;
+        case 'lose':
+          resultText = '😤 AI Wins!';
+          resultClass = 'lose';
+          aiScore++;
+          break;
+        case 'tie':
+          resultText = '🤝 It\'s a Tie!';
+          resultClass = 'tie';
+          break;
+      }
+      
+      resultDisplay.textContent = resultText;
+      resultDisplay.className = `result-text show ${resultClass}`;
+      
+      // Update scores
+      document.getElementById('playerScore').textContent = playerScore;
+      document.getElementById('aiScore').textContent = aiScore;
+    }
+
+    function playMove(playerChoice) {
+      if (!gameActive) return;
+      
+      gameActive = false;
+      
+      // Add selection effect to clicked button
+      const clickedBtn = document.querySelector(`[onclick="playMove('${playerChoice}')"]`);
+      clickedBtn.classList.add('selected');
+      
+      // Reset displays
+      document.getElementById('playerChoice').classList.remove('active');
+      document.getElementById('aiChoice').classList.remove('active');
+      document.getElementById('result').classList.remove('show');
+      
+      // Show AI thinking
+      const aiThinking = document.getElementById('aiThinking');
+      aiThinking.classList.add('show');
+      
+      // Simulate AI thinking time
+      setTimeout(() => {
+        const aiChoice = getAIChoice();
+        const result = determineWinner(playerChoice, aiChoice);
+        
+        aiThinking.classList.remove('show');
+        updateDisplay(playerChoice, aiChoice, result);
+        
+        // Remove selection effect
+        setTimeout(() => {
+          clickedBtn.classList.remove('selected');
+          gameActive = true;
+        }, 1000);
+      }, 1000);
+    }
+
+    function resetGame() {
+      playerScore = 0;
+      aiScore = 0;
+      gameActive = true;
+      
+      document.getElementById('playerScore').textContent = '0';
+      document.getElementById('aiScore').textContent = '0';
+      
+      // Reset displays
+      const playerDisplay = document.getElementById('playerChoice');
+      const aiDisplay = document.getElementById('aiChoice');
+      const resultDisplay = document.getElementById('result');
+      
+      playerDisplay.classList.remove('active');
+      aiDisplay.classList.remove('active');
+      resultDisplay.classList.remove('show');
+      
+      playerDisplay.querySelector('.choice-emoji').textContent = '❓';
+      playerDisplay.querySelector('.choice-label').textContent = 'You';
+      
+      aiDisplay.querySelector('.choice-emoji').textContent = '🤖';
+      aiDisplay.querySelector('.choice-label').textContent = 'AI';
+      
+      resultDisplay.textContent = '';
+      resultDisplay.className = 'result-text';
+      
+      document.getElementById('aiThinking').classList.remove('show');
+    }
+
+    // Initialize particles animation
+    createParticles();
+  </script>
+</body>
+</html>
